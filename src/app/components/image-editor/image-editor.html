@@ -54,7 +54,7 @@
           </div>
 
           <!-- Predefined Colors -->
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             @for (color of predefinedColors; track color) {
               <button
                 (click)="currentColor.set(color)"
@@ -80,7 +80,7 @@
           </div>
 
           <!-- Actions -->
-          <div class="flex gap-2 ml-auto">
+          <div class="flex flex-wrap gap-2 ml-auto">
             <button
               (click)="clearCanvas()"
               class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium">

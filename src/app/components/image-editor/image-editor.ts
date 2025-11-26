@@ -135,8 +135,8 @@ export class ImageEditor {
   }
 
   getMousePos(event: MouseEvent | TouchEvent): { x: number; y: number } {
-    const canvasEl = this.canvas()?.nativeElement;
-    if (!canvasEl) return {x: 0, y: 0};
+    const canvasEl = this.canvas().nativeElement;
+    if (!canvasEl) return { x: 0, y: 0 };
 
     const rect = canvasEl.getBoundingClientRect();
 
@@ -150,9 +150,13 @@ export class ImageEditor {
       clientY = event.touches[0].clientY;
     }
 
+    // Calculate the scale ratio between display size and internal size
+    const scaleX = canvasEl.width / rect.width;
+    const scaleY = canvasEl.height / rect.height;
+
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
     };
   }
 
