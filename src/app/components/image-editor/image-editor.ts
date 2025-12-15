@@ -76,45 +76,65 @@ export class ImageEditor {
           // Get the original image dimensions
           const originalWidth = img.naturalWidth;
           const originalHeight = img.naturalHeight;
+          const aspectRatio = originalWidth / originalHeight;
 
-          // Get screen/container constraints (leaving some margin)
-          const maxWidth = window.innerWidth * 0.9;
-          const maxHeight = window.innerHeight * 0.8;
+          // Get device pixel ratio for high DPI screens
+          const ratio = Math.max(window.devicePixelRatio || 1, 1);
 
-          // Calculate scaling factor
-          let scale = 1;
-          if (originalWidth > maxWidth || originalHeight > maxHeight) {
-            const scaleWidth = maxWidth / originalWidth;
-            const scaleHeight = maxHeight / originalHeight;
-            scale = Math.min(scaleWidth, scaleHeight);
+          // Define constraints
+          const minWidth = 100;
+          const maxWidth = 200;
+          const maxScreenWidth = window.innerWidth * 0.9;
+          const maxScreenHeight = window.innerHeight * 0.8;
+
+          // Calculate target width considering all constraints
+          let targetWidth = originalWidth;
+
+          // Apply screen constraints
+          if (originalWidth > maxScreenWidth || originalHeight > maxScreenHeight) {
+            const scaleWidth = maxScreenWidth / originalWidth;
+            const scaleHeight = maxScreenHeight / originalHeight;
+            const scale = Math.min(scaleWidth, scaleHeight);
+            targetWidth = originalWidth * scale;
           }
 
-          // Calculate final dimensions
-          const finalWidth = Math.floor(originalWidth * scale);
-          const finalHeight = Math.floor(originalHeight * scale);
+          // Apply min/max constraints
+          targetWidth = Math.max(minWidth, Math.min(maxWidth, targetWidth));
+
+          // Calculate CSS dimensions (what the user sees)
+          const cssWidth = Math.floor(targetWidth);
+          const cssHeight = Math.floor(targetWidth / aspectRatio);
+
+          // Calculate actual canvas dimensions (accounting for DPI)
+          const canvasWidth = cssWidth * ratio;
+          const canvasHeight = cssHeight * ratio;
 
           // Get canvas and set dimensions
           const canvas = this.signatureCanvas().nativeElement;
-          canvas.width = finalWidth;
-          canvas.height = finalHeight;
 
-          // Set the image as CSS background
+          // Set CSS size (display size)
+          canvas.style.width = `${cssWidth}px`;
+          canvas.style.height = `${cssHeight}px`;
+
+          // Set actual canvas size (for high DPI)
+          canvas.width = canvasWidth;
+          canvas.height = canvasHeight;
+
+          // Scale the context to account for DPI
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.scale(ratio, ratio);
+          }
+
+          // Set the image as CSS background (it will scale automatically)
           canvas.style.backgroundImage = `url(${e.target?.result})`;
-          canvas.style.backgroundSize = 'contain';
+          canvas.style.backgroundSize = 'cover';
           canvas.style.backgroundRepeat = 'no-repeat';
           canvas.style.backgroundPosition = 'center';
 
-
-          const ctx = canvas.getContext("2d");
-          const ratio = Math.max(window.devicePixelRatio || 1, 1);
-          canvas.width = canvas.offsetWidth * ratio;
-          canvas.height = canvas.offsetHeight * ratio;
-          ctx.scale(ratio, ratio);
-
-
           // Initialize SignaturePad with transparent background
           this.signaturePad = new SignaturePad(canvas, {
-            backgroundColor: 'rgba(0, 0, 0, 0)' // Transparent
+            backgroundColor: 'rgba(0, 0, 0, 0)'
           });
 
           this.uploadedImage = img;
@@ -126,8 +146,6 @@ export class ImageEditor {
       reader.readAsDataURL(file);
     }
   }
-
-
   clickDownloadImage() {
     const canvas = this.signatureCanvas().nativeElement;
 
