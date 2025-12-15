@@ -104,6 +104,14 @@ export class ImageEditor {
           canvas.style.backgroundRepeat = 'no-repeat';
           canvas.style.backgroundPosition = 'center';
 
+
+          const ctx = canvas.getContext("2d");
+          const ratio = Math.max(window.devicePixelRatio || 1, 1);
+          canvas.width = canvas.offsetWidth * ratio;
+          canvas.height = canvas.offsetHeight * ratio;
+          ctx.scale(ratio, ratio);
+
+
           // Initialize SignaturePad with transparent background
           this.signaturePad = new SignaturePad(canvas, {
             backgroundColor: 'rgba(0, 0, 0, 0)' // Transparent
