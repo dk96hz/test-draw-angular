@@ -29,7 +29,7 @@
           <!-- Tool Selection -->
           <div class="flex gap-2">
             <button
-              (click)="currentTool.set('draw')"
+              (click)="updateMode('draw')"
               [class.bg-blue-500]="currentTool() === 'draw'"
               [class.text-white]="currentTool() === 'draw'"
               [class.bg-white]="currentTool() !== 'draw'"
@@ -37,7 +37,7 @@
               ✏️ Draw
             </button>
             <button
-              (click)="currentTool.set('erase')"
+              (click)="updateMode('erase')"
               [class.bg-blue-500]="currentTool() === 'erase'"
               [class.text-white]="currentTool() === 'erase'"
               [class.bg-white]="currentTool() !== 'erase'"
@@ -60,7 +60,7 @@
           <div class="flex flex-wrap gap-2">
             @for (color of predefinedColors; track color) {
               <button
-                (click)="currentColor.set(color)"
+                (click)="updateColor(color)"
                 [style.background-color]="color"
                 [class.ring-4]="currentColor() === color"
                 [class.ring-blue-400]="currentColor() === color"
@@ -75,7 +75,7 @@
             <input
               type="range"
               [ngModel]="brushSize()"
-              (ngModelChange)="brushSize.set($event)"
+              (ngModelChange)="updateBrushSize($event)"
               min="1"
               max="50"
               class="w-32"/>
@@ -95,7 +95,7 @@
               Download
             </button>
             <button
-              (click)="resetEditor()"
+              (click)="undo()"
               class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium">
               New Image
             </button>

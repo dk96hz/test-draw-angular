@@ -17,7 +17,7 @@ export class ImageEditor {
   //4:3
 
   private minWidth = 300;
-  private maxWidth = 300;
+  private maxWidth = 400;
 
   imageLoaded = signal(false);
   currentTool = signal<'draw' | 'erase'>('draw');
@@ -50,8 +50,33 @@ export class ImageEditor {
   }
 
   updateColor(color: string) {
-    console.log(color);
+    this.currentColor.set(color);
     this.signaturePad.penColor = color;
+  }
+
+  updateBrushSize(size: number) {
+    this.brushSize.set(size);
+    this.signaturePad.minWidth = size;
+    this.signaturePad.maxWidth = size;
+  }
+
+  updateMode(mode: "draw" | "erase") {
+    console.log(this.signaturePad.compositeOperation);
+    this.currentTool.set(mode);
+    if (mode === "draw") {
+      this.signaturePad.compositeOperation = "source-over";
+      this.signaturePad.penColor = this.currentColor();
+    } else {
+      this.signaturePad.compositeOperation = "destination-out";
+    }
+  }
+
+  undo() {
+    const data = this.signaturePad.toData();
+    if (data) {
+      data.pop();
+      this.signaturePad.fromData(data);
+    }
   }
 
   constructor() {
@@ -83,7 +108,7 @@ export class ImageEditor {
 
           // Define constraints
           const minWidth = 100;
-          const maxWidth = 200;
+          const maxWidth = 400;
           const maxScreenWidth = window.innerWidth * 0.9;
           const maxScreenHeight = window.innerHeight * 0.8;
 
@@ -146,26 +171,46 @@ export class ImageEditor {
       reader.readAsDataURL(file);
     }
   }
-  clickDownloadImage() {
-    const canvas = this.signatureCanvas().nativeElement;
 
-    // Create a temporary canvas to combine both layers
+  clickDownloadImage() {
+    if (!this.uploadedImage) return;
+
+    const canvas = this.signatureCanvas().nativeElement;
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+
+    // Get the original image dimensions
+    const originalWidth = this.uploadedImage.naturalWidth;
+    const originalHeight = this.uploadedImage.naturalHeight;
+
+    // Get the current canvas CSS dimensions
+    const cssWidth = canvas.offsetWidth;
+    const cssHeight = canvas.offsetHeight;
+
+    // Calculate the scale factor between original and display size
+    const scaleX = originalWidth / cssWidth;
+    const scaleY = originalHeight / cssHeight;
+
+    // Create a temporary canvas at original image size
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
+    tempCanvas.width = originalWidth;
+    tempCanvas.height = originalHeight;
+
     const tempCtx = tempCanvas.getContext('2d');
 
-    if (tempCtx && this.uploadedImage) {
-      // Draw the background image first
-      tempCtx.drawImage(this.uploadedImage, 0, 0, canvas.width, canvas.height);
+    if (tempCtx) {
+      // Draw the original image at full resolution
+      tempCtx.drawImage(this.uploadedImage, 0, 0, originalWidth, originalHeight);
 
-      // Draw the signature/drawing canvas on top
-      tempCtx.drawImage(canvas, 0, 0);
+      // Scale the context to match the original image size
+      tempCtx.scale(scaleX, scaleY);
 
-      // Convert to data URL or blob
+      // Draw the signature/drawing canvas on top (it will be scaled up automatically)
+      tempCtx.drawImage(canvas, 0, 0, cssWidth, cssHeight);
+
+      // Convert to data URL with maximum quality
       const finalImage = tempCanvas.toDataURL('image/png');
 
-      // Download or use the combined image
+      // Download the combined image
       this.downloadImage(finalImage);
     }
   }
